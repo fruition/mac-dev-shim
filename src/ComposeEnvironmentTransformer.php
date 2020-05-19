@@ -2,6 +2,7 @@
 
 namespace Fruition\MacDevShim;
 
+use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Yaml\Yaml;
 
@@ -30,6 +31,13 @@ class ComposeEnvironmentTransformer {
   protected $pwd;
 
   /**
+   * File system.
+   *
+   * @var \Symfony\Component\Filesystem\Filesystem
+   */
+  protected $fileSystem;
+
+  /**
    * Constructor.
    */
   public function __construct() {
@@ -38,6 +46,7 @@ class ComposeEnvironmentTransformer {
       ->name('docker-compose.yml')
       ->ignoreUnreadableDirs();
     $this->pwd = getenv('PWD');
+    $this->fileSystem = new Filesystem();
   }
 
   /**
@@ -53,6 +62,7 @@ class ComposeEnvironmentTransformer {
       $tree[] = $up;
       $dir = $up != '/' ? $up : FALSE;
     }
+    // Break on first file found, which is why we iterate ourselves.
     foreach ($tree as $dir) {
       $finder = clone $this->finder;
       $found = $finder->in($dir);
@@ -65,9 +75,11 @@ class ComposeEnvironmentTransformer {
       throw new \RuntimeException('Could not find docker-compose.yml in any parent directory.');
     }
     $baseYaml = Yaml::parse(reset($result)->getContents());
-    $cachedFile = getenv('HOME') . '/Library/Cache/FruitionMacDevShim/' . crc32(serialize($baseYaml)) . '.yml';
-    if (!file_exists($cachedFile)) {
-      file_put_contents($cachedFile, Yaml::dump($this->createOverrideYaml($baseYaml)));
+    $cacheDir = getenv('HOME') . '/Library/Cache/FruitionMacDevShim';
+    $cachedFile = $cacheDir . '/' . crc32(serialize($baseYaml)) . '.yml';
+    if (!$this->fileSystem->exists($cachedFile)) {
+      $this->fileSystem->mkdir($cacheDir);
+      $this->fileSystem->dumpFile($cachedFile, Yaml::dump($this->createOverrideYaml($baseYaml)));
     }
     putenv("COMPOSE_FILE=$dir/docker-compose.yml:$cachedFile");
   }
@@ -107,15 +119,17 @@ class ComposeEnvironmentTransformer {
             if (empty($sourcePathMap[$source])) {
               // Per docs: "Entries for volumes and devices are merged using the mount path in the container"
               $name = 'nfs' . count($sourcePathMap);
-              $overrideYaml['services'][$serviceName]['volumes'][$name]
+              $overrideYaml['volumes'][$name]
                 = $this->getNfsVolumeDefinition($source);
               $sourcePathMap[$source] = $name;
             }
-            $overrideYaml['services'][$serviceName][] = "{$sourcePathMap[$source]}:$destWithOptions";
+            $overrideYaml['services'][$serviceName]['volumes']
+              = "{$sourcePathMap[$source]}:$destWithOptions";
           }
         }
       }
     }
+    return $overrideYaml;
   }
 
   /**
@@ -128,7 +142,7 @@ class ComposeEnvironmentTransformer {
    *   Volume definition for inclusion in the override Yaml.
    */
   protected function getNfsVolumeDefinition(string $relativeSource): array {
-    $local = ltrim('/', ltrim('.', $relativeSource));
+    $local = ltrim(ltrim($relativeSource, '.'), '/');
     if (strlen($local) > 0) {
       $local = "/$local";
     }
