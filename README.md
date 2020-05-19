@@ -29,6 +29,10 @@ This package exists to provide a wrapper around `docker-compose` invocation to c
 [override file](https://docs.docker.com/compose/extends/#understanding-multiple-compose-files) to utilize NFS instead
 of bind-mounts, and provide simple tooling to perform one-time NFS setup.
 
+## Installation
+
+`composer require fruition/`
+
 ### Copyright and Licenses.
 
 Copyright 2020 Fruition Growth LLC. MIT licensed.
