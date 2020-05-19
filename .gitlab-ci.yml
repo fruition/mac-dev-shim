@@ -1,7 +1,6 @@
 deploy:
-  variables:
-    GIT_SSH_COMMAND: 'ssh -i $CI_PROJECT_DIR/deploy -o UserKnownHostsFile=$KNOWN_HOSTS'
   script:
     - echo $DEPLOY_KEY > deploy && chmod 400 deploy
     - git remote add github git@github.com:fruition/mac-dev-shim.git || true
-    - git push github HEAD:$CI_COMMIT_REF_NAME
+    - GIT_SSH_COMMAND="ssh -i $CI_PROJECT_DIR/deploy -o UserKnownHostsFile=$KNOWN_HOSTS"
+      git push github HEAD:$CI_COMMIT_REF_NAME
