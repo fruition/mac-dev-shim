@@ -39,13 +39,19 @@ shell ahead of of the globally-installed `docker-compose` executable. This could
 
 ### Install the shim with [Composer](https://getcomposer.org):
 
-`composer global require fruition/mac-dev-shim`
+```
+composer global require fruition/mac-dev-shim
+```
 
 Add (if you haven't already) the following to your `~/.bash_profile` (if using Bash, which is the Mac OS X default):
 
 ```bash
 PATH="$HOME/.composer/vendor/bin:$PATH"
 ```
+
+## Usage
+
+After installing, call `docker-compose` as usual.
 
 ### Copyright and Licenses.
 
