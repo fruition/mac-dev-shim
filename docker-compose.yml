@@ -1,0 +1,32 @@
+version: "2.3"
+
+services:
+  web:
+    build:
+      context: .
+      target: base
+      args:
+        with_xdebug: 1
+    volumes:
+      - .:/var/www/html
+      - ./docroot/sites/default/settings.by-db.php:/var/www/site-php/obermeyer/obermeyer-settings.inc:ro
+    environment:
+      - ENVIRONMENT=DEV
+      - HTPASSWD_USER
+      - HTPASSWD_PASSWORD
+      - CRON_OK=FALSE
+      - DRUSH_OPTIONS_URI=http://localhost:8088
+    ports:
+      - "127.0.0.1:8088:80"
+  db:
+    image: mysql:5.7
+    command: ["--max_allowed_packet=32505856"] # 256M
+    environment:
+      - MYSQL_ROOT_PASSWORD=user
+      - MYSQL_DATABASE=default
+      - MYSQL_USER=user
+      - MYSQL_PASSWORD=user
+    volumes:
+      - data:/var/lib/mysql
+volumes:
+  data: {}

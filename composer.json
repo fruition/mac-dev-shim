@@ -1,0 +1,24 @@
+{
+    "name": "fruition/mac-dev-shim",
+    "type": "library",
+    "description": "A performance and DX shim for Mac OS users utilizing docker-compose.",
+    "homepage": "https://github.com/fruition/mac-dev-shim",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Brad Jones",
+            "email": "brad.jones@fruition.net"
+        }
+    ],
+    "require": {
+        "symfony/yaml": "^5.0",
+        "symfony/finder": "^5.0",
+        "php": "^7.2"
+    },
+    "bin": ["bin/docker-compose", "bin/fru-mac-environment-transform"],
+    "autoload": {
+        "psr-4": {
+            "Fruition\\MacDevShim\\": "src/"
+        }
+    }
+}

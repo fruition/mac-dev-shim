@@ -31,7 +31,21 @@ of bind-mounts, and provide simple tooling to perform one-time NFS setup.
 
 ## Installation
 
-`composer require fruition/`
+Fruition is a PHP shop and as such we assume our developers have PHP and `composer` installed locally at a minimum.
+This package uses the Symfony Yaml component and thus must be installed using Composer. Beyond this packaging,
+the shim must only be available in a known location that can be added to the developer's `PATH` to be selected by the
+shell ahead of of the globally-installed `docker-compose` executable. This could be done per project with
+[direnv](https://direnv.net/), or (simplest way) by including your global composer `bin` directory, per below.
+
+### Install the shim with [Composer](https://getcomposer.org):
+
+`composer global require fruition/mac-dev-shim`
+
+Add (if you haven't already) the following to your `~/.bash_profile` (if using Bash, which is the Mac OS X default):
+
+```bash
+PATH="$HOME/.composer/vendor/bin:$PATH"
+```
 
 ### Copyright and Licenses.
 
