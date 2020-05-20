@@ -81,6 +81,7 @@ class ComposeEnvironmentTransformer {
       $this->fileSystem->mkdir($cacheDir);
       $this->fileSystem->dumpFile($cachedFile, Yaml::dump($this->createOverrideYaml($baseYaml)));
     }
+    // The overrides may be empty but we avoid re-computing it based on the hash.
     echo "$dir/docker-compose.yml:$cachedFile";
   }
 

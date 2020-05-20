@@ -80,8 +80,17 @@ if [ -z "$DOCKER_COMPOSE" ]; then
   exit 100
 fi
 
-if [ ! -f "$FLAG" ] || [ "$(head -n 1 $FLAG)" != "$(defaults read loginwindow SystemVersionStampAsString)" ]; then
-  nfs_setup
+while getopts ":f:" o; do
+    case "${o}" in
+        f)
+            CLI_F_ARG=${OPTARG}
+            ;;
+    esac
+done
+
+if [ ! -z "$CLI_F_ARG" ] || [ ! -z "$COMPOSE_FILE" ]; then
+  echo "Shim not running as docker-compose file is specified by flag or environment variable."
+  exec "$DOCKER_COMPOSE" "$@"
 fi
 
 # This will be in the path.
