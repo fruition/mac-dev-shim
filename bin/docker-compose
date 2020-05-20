@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+FLAG="$HOME/.fru/.macos-nfs-setup"
+
 nfs_setup() {
   # Adapted from https://medium.com/@sean.handley/how-to-set-up-docker-for-mac-with-native-nfs-145151458adc
   # Further adapted from https://github.com/drud/ddev/blob/master/scripts/macos_ddev_nfs_setup.sh
@@ -11,6 +13,16 @@ nfs_setup() {
   set -o nounset
 
   OS=$(uname -s)
+
+  echo "
+  +-------------------------------------------+
+  | It appears you have not yet set up NFS.   |
+  | Setup native NFS on macOS for Docker      |
+  | Only localhost is allowed access;         |
+  | Your home directory is shared by default. |
+  | But, of course, pay attention to security.|
+  +-------------------------------------------+
+  "
 
   if [ $OS != "Darwin" ]; then
     echo "This script is OSX-only. Please do not run it on any other Unix."
@@ -24,14 +36,6 @@ nfs_setup() {
 
   docker version > /dev/null || ( echo "Docker does not seem to be running or functional, please check it for problems" && exit 103)
 
-  echo "
-  +-------------------------------------------+
-  | Setup native NFS on macOS for Docker
-  | Only localhost is allowed access;
-  | Your home directory is shared by default.
-  | But, of course, pay attention to security.
-  +-------------------------------------------+
-  "
   echo "Stopping running ddev projects"
   echo ""
 
@@ -64,6 +68,7 @@ nfs_setup() {
 
   echo "== Restarting nfsd..."
   sudo nfsd enable && sudo nfsd restart
+  mkdir -p "$(dirname $FLAG)"
   defaults read loginwindow SystemVersionStampAsString > $FLAG
 }
 
@@ -75,13 +80,10 @@ if [ -z "$DOCKER_COMPOSE" ]; then
   exit 100
 fi
 
-FLAG="$HOME/.fru/.macos-nfs-setup"
-
 if [ ! -f "$FLAG" ] || [ "$(head -n 1 $FLAG)" != "$(defaults read loginwindow SystemVersionStampAsString)" ]; then
   nfs_setup
 fi
 
 # This will be in the path.
-fru-mac-environment-transform
-
+export COMPOSE_FILE=$(fru-mac-environment-transform)
 exec "$DOCKER_COMPOSE" "$@"

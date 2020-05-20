@@ -81,7 +81,7 @@ class ComposeEnvironmentTransformer {
       $this->fileSystem->mkdir($cacheDir);
       $this->fileSystem->dumpFile($cachedFile, Yaml::dump($this->createOverrideYaml($baseYaml)));
     }
-    putenv("COMPOSE_FILE=$dir/docker-compose.yml:$cachedFile");
+    echo "$dir/docker-compose.yml:$cachedFile";
   }
 
   /**
@@ -115,6 +115,10 @@ class ComposeEnvironmentTransformer {
             $source = $bindMounted[1];
             // Destination with options, e.g. ':ro'
             $destWithOptions = $bindMounted[2];
+            // Only mount directories with NFS.
+            if (!is_dir($this->pwd . '/' . $source)) {
+              continue;
+            }
 
             if (empty($sourcePathMap[$source])) {
               // Per docs: "Entries for volumes and devices are merged using the mount path in the container"
@@ -123,7 +127,7 @@ class ComposeEnvironmentTransformer {
                 = $this->getNfsVolumeDefinition($source);
               $sourcePathMap[$source] = $name;
             }
-            $overrideYaml['services'][$serviceName]['volumes']
+            $overrideYaml['services'][$serviceName]['volumes'][]
               = "{$sourcePathMap[$source]}:$destWithOptions";
           }
         }

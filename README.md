@@ -49,6 +49,15 @@ Add (if you haven't already) the following to your `~/.bash_profile` (if using B
 PATH="$HOME/.composer/vendor/bin:$PATH"
 ```
 
+### NFS debugging
+
+* Use `showmount -e` to find out what is exported via NFS. If you don't see a parent of your project directory in there,
+    then NFS can't work.
+* If nothing is showing, use `nfsd checkexports` and read carefully for errors.
+* Use `ps -ef | grep nfsd` to make sure nfsd is running.
+* Restart nfsd with `sudo nfsd restart`
+* Run Console.app and put "nfsd" in the search box at the top. `sudo nfsd restart` and read the messages carefully.
+
 ## Usage
 
 After installing, call `docker-compose` as usual.
