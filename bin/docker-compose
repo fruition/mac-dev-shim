@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-FLAG="$HOME/.fru/.macos-nfs-setup"
-
 nfs_setup() {
   # Adapted from https://medium.com/@sean.handley/how-to-set-up-docker-for-mac-with-native-nfs-145151458adc
   # Further adapted from https://github.com/drud/ddev/blob/master/scripts/macos_ddev_nfs_setup.sh
@@ -14,6 +12,32 @@ nfs_setup() {
 
   OS=$(uname -s)
 
+  if [ $OS != "Darwin" ]; then
+    echo "This script is OSX-only. Please do not run it on any other Unix."
+    exit 101
+  fi
+
+  # Share /Users folder. If the projects are elsewhere the /etc/exports will need
+  # to be adapted.
+  # If Catalina or later, the share directory has to be /System/Volumes/Data/...
+  SHAREDIR=${HOME}
+  if [ -d /System/Volumes/Data${HOME} ] ; then
+      SHAREDIR=/System/Volumes/Data${HOME}
+  fi
+
+  if [[ $EUID -eq 0 ]]; then
+    echo "This script must NOT be run with sudo/root. Please re-run without sudo." 1>&2
+    exit 102
+  fi
+
+  # nfsd on mac can be enabled but will only run if /etc/exports is present. If it's already configured for this
+  # version of MacOS, we early return assuming nfs setup has already been performed.
+  FILE=/etc/exports
+  LINE="${SHAREDIR} -alldirs -mapall=$(id -u):$(id -g) localhost"
+  if [ $(grep -qF -- "$LINE" "$FILE") ]; then
+    return 0
+  fi
+
   echo "
   +-------------------------------------------+
   | It appears you have not yet set up NFS.   |
@@ -24,20 +48,7 @@ nfs_setup() {
   +-------------------------------------------+
   "
 
-  if [ $OS != "Darwin" ]; then
-    echo "This script is OSX-only. Please do not run it on any other Unix."
-    exit 101
-  fi
-
-  if [[ $EUID -eq 0 ]]; then
-    echo "This script must NOT be run with sudo/root. Please re-run without sudo." 1>&2
-    exit 102
-  fi
-
   docker version > /dev/null || ( echo "Docker does not seem to be running or functional, please check it for problems" && exit 103)
-
-  echo "Stopping running ddev projects"
-  echo ""
 
   open -a Docker
 
@@ -50,17 +61,9 @@ nfs_setup() {
   osascript -e 'quit app "Docker"'
 
   echo "== Setting up nfs..."
-  # Share /Users folder. If the projects are elsewhere the /etc/exports will need
-  # to be adapted.
-  # If Catalina or later, the share directory has to be /System/Volumes/Data/...
-  SHAREDIR=${HOME}
-  if [ -d /System/Volumes/Data${HOME} ] ; then
-      SHAREDIR=/System/Volumes/Data${HOME}
-  fi
-  LINE="${SHAREDIR} -alldirs -mapall=$(id -u):$(id -g) localhost"
-  FILE=/etc/exports
+
   sudo bash -c "echo >> $FILE" || ( echo "Unable to edit /etc/exports, need Full Disk Access on Mojave and later" && exit 103 )
-  grep -qF -- "$LINE" "$FILE" || ( sudo echo "$LINE" | sudo tee -a $FILE > /dev/null )
+  sudo echo "$LINE" | sudo tee -a $FILE > /dev/null
 
   LINE="nfs.server.mount.require_resv_port = 0"
   FILE=/etc/nfs.conf
@@ -68,9 +71,9 @@ nfs_setup() {
 
   echo "== Restarting nfsd..."
   sudo nfsd enable && sudo nfsd restart
-  mkdir -p "$(dirname $FLAG)"
-  defaults read loginwindow SystemVersionStampAsString > $FLAG
 }
+
+nfs_setup
 
 # Use the next occurrence of docker-compose in the path.
 DOCKER_COMPOSE=$(which -a docker-compose | sed -n '2p')

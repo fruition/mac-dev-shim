@@ -75,7 +75,7 @@ class ComposeEnvironmentTransformer {
       throw new \RuntimeException('Could not find docker-compose.yml in any parent directory.');
     }
     $baseYaml = Yaml::parse(reset($result)->getContents());
-    $cacheDir = getenv('HOME') . '/Library/Cache/FruitionMacDevShim';
+    $cacheDir = getenv('HOME') . '/Library/Caches/FruitionMacDevShim';
     $cachedFile = $cacheDir . '/' . crc32(serialize($baseYaml)) . '.yml';
     if (!$this->fileSystem->exists($cachedFile)) {
       $this->fileSystem->mkdir($cacheDir);

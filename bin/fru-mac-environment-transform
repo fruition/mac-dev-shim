@@ -3,7 +3,15 @@
 
 set_time_limit(0);
 
-require dirname(__DIR__).'/vendor/autoload.php';
+if (file_exists($autoloadFile = __DIR__ . '/vendor/autoload.php')
+  || file_exists($autoloadFile = __DIR__ . '/../autoload.php')
+  || file_exists($autoloadFile = __DIR__ . '/../../autoload.php')
+  || file_exists($autoloadFile = __DIR__ . '/../../../autoload.php')
+) {
+  include_once($autoloadFile);
+} else {
+  throw new \Exception("Could not locate autoload.php. cwd is $cwd; __DIR__ is " . __DIR__);
+}
 
 $transformer = new \Fruition\MacDevShim\ComposeEnvironmentTransformer();
 $transformer->transform();
