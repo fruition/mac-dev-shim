@@ -32,10 +32,7 @@ nfs_setup() {
   # nfsd on mac can be enabled but will only run if /etc/exports is present. If it's already configured for this
   # version of MacOS, we early return assuming nfs setup has already been performed.
   FILE=/etc/exports
-  LINE="${SHAREDIR} -alldirs -mapall=$(id -u):$(id -g) localhost"
-  if [ $(grep -qF -- "$LINE" "$FILE" 2> /dev/null) ]; then
-    return 0
-  fi
+  grep -q -- "^${SHAREDIR}.*localhost\$" "$FILE" && return
 
   echo "
   +-------------------------------------------+
@@ -47,22 +44,27 @@ nfs_setup() {
   +-------------------------------------------+
   "
 
-  docker version 2> /dev/null || ( echo "Docker does not seem to be running or functional, is it installed?" && exit 103)
+  docker version > /dev/null 2>&1 || ( echo "Docker does not seem to be running or functional, is it installed?" && exit 103)
 
   open -a Docker
 
   while ! docker ps > /dev/null 2>&1 ; do sleep 2; done
 
-  echo "== Stopping running docker containers..."
-  docker stop "$(docker ps -a -q)"
+  RUNNING=$(docker ps -q)
+  if [[ ! -z "$RUNNING" ]]; then
+      echo "== Stopping running docker containers..."
+      docker stop "$RUNNING"
+  fi
+  echo "== Pruning volumes..."
   docker volume prune -f > /dev/null
 
+  echo
   osascript -e 'quit app "Docker"'
 
-  echo "== Setting up nfs..."
+  echo "== Setting up nfs, includes your home directory... password required to edit $FILE and start nfsd..."
 
   sudo bash -c "echo >> $FILE" || ( echo "Unable to edit /etc/exports, need Full Disk Access on Mojave and later" && exit 103 )
-  sudo echo "$LINE" | sudo tee -a $FILE > /dev/null
+  sudo echo "${SHAREDIR} -alldirs -mapall=$(id -u):$(id -g) localhost" | sudo tee -a $FILE > /dev/null
 
   LINE="nfs.server.mount.require_resv_port = 0"
   FILE=/etc/nfs.conf
@@ -70,6 +72,7 @@ nfs_setup() {
 
   echo "== Restarting nfsd..."
   sudo nfsd enable && sudo nfsd restart
+  open -a Docker
 }
 
 # Detect broken recursion.
@@ -80,7 +83,7 @@ fi
 # Use the next occurrence of docker-compose in the path.
 DOCKER_COMPOSE=$(which -a docker-compose | sed -n '2p')
 
-FRU_DEV_SHIM_RECURSION=1 eval "$DOCKER_COMPOSE version" 2> /dev/null || ( echo "Cannot find docker-compose; is it installed?" && exit 103)
+FRU_DEV_SHIM_RECURSION=1 eval "$DOCKER_COMPOSE version" > /dev/null 2>&1 || ( echo "Cannot find docker-compose; is it installed?" && exit 103)
 
 nfs_setup
 
