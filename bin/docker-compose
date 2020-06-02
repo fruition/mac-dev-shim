@@ -1,14 +1,13 @@
 #!/usr/bin/env bash
 
+set -o errexit
+set -o pipefail
+
 nfs_setup() {
   # Adapted from https://medium.com/@sean.handley/how-to-set-up-docker-for-mac-with-native-nfs-145151458adc
   # Further adapted from https://github.com/drud/ddev/blob/master/scripts/macos_ddev_nfs_setup.sh
 
   # Updated from DDEV's version to remove DDEV-local references.
-
-  set -o errexit
-  set -o pipefail
-  set -o nounset
 
   OS=$(uname -s)
 
@@ -34,7 +33,7 @@ nfs_setup() {
   # version of MacOS, we early return assuming nfs setup has already been performed.
   FILE=/etc/exports
   LINE="${SHAREDIR} -alldirs -mapall=$(id -u):$(id -g) localhost"
-  if [ $(grep -qF -- "$LINE" "$FILE") ]; then
+  if [ $(grep -qF -- "$LINE" "$FILE" 2> /dev/null) ]; then
     return 0
   fi
 
@@ -48,7 +47,7 @@ nfs_setup() {
   +-------------------------------------------+
   "
 
-  docker version > /dev/null || ( echo "Docker does not seem to be running or functional, please check it for problems" && exit 103)
+  docker version 2> /dev/null || ( echo "Docker does not seem to be running or functional, is it installed?" && exit 103)
 
   open -a Docker
 
@@ -73,10 +72,17 @@ nfs_setup() {
   sudo nfsd enable && sudo nfsd restart
 }
 
-nfs_setup
+# Detect broken recursion.
+if [ "$1" == "version" ] && [ ! -z "$FRU_DEV_SHIM_RECURSION" ]; then
+  exit 99
+fi
 
 # Use the next occurrence of docker-compose in the path.
 DOCKER_COMPOSE=$(which -a docker-compose | sed -n '2p')
+
+FRU_DEV_SHIM_RECURSION=1 eval "$DOCKER_COMPOSE version" 2> /dev/null || ( echo "Cannot find docker-compose; is it installed?" && exit 103)
+
+nfs_setup
 
 if [ -z "$DOCKER_COMPOSE" ]; then
   echo "Could not find docker-compose."

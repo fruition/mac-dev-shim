@@ -37,6 +37,12 @@ the shim must only be available in a known location that can be added to the dev
 shell ahead of of the globally-installed `docker-compose` executable. This could be done per project with
 [direnv](https://direnv.net/), or (simplest way) by including your global composer `bin` directory, per below.
 
+### Install/Transition to Docker Desktop for Mac
+
+If you haven't already, install [Docker Desktop For Mac](https://docs.docker.com/docker-for-mac/install/). If you
+previously used Docker Toolbox, follow the instructions for transitioning. The Docker installer for Mac OS includes
+`docker-compose`.
+
 ### Install the shim with [Composer](https://getcomposer.org):
 
 ```
@@ -49,6 +55,8 @@ Add (if you haven't already) the following to your `~/.bash_profile` (if using B
 PATH="$HOME/.composer/vendor/bin:$PATH"
 ```
 
+You will need to restart your Terminal session for the new value to work.
+
 ### NFS debugging
 
 * Use `showmount -e` to find out what is exported via NFS. If you don't see a parent of your project directory in there,
@@ -57,6 +65,10 @@ PATH="$HOME/.composer/vendor/bin:$PATH"
 * Use `ps -ef | grep nfsd` to make sure nfsd is running.
 * Restart nfsd with `sudo nfsd restart`
 * Run Console.app and put "nfsd" in the search box at the top. `sudo nfsd restart` and read the messages carefully.
+
+### Shim debugging
+
+To view the "combined" compose file Yaml, run `docker-compose config`.
 
 ## Usage
 

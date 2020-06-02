@@ -52,7 +52,7 @@ class ComposeEnvironmentTransformer {
   /**
    * Transform the environment for Mac OS X.
    */
-  public function transform() {
+  public function transform(): void {
     // This is called from the bash script so this is a known variable.
     $dir = $this->pwd;
     // Recursively find docker-compose.yml
@@ -130,6 +130,8 @@ class ComposeEnvironmentTransformer {
             }
             $overrideYaml['services'][$serviceName]['volumes'][]
               = "{$sourcePathMap[$source]}:$destWithOptions";
+            $overrideYaml['services'][$serviceName]['environment']['HOST_OS']
+              = 'Darwin';
           }
         }
       }
