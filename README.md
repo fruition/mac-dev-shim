@@ -74,6 +74,9 @@ To view the "combined" compose file Yaml, run `docker-compose config`.
 
 After installing, call `docker-compose` as usual.
 
+The shim additionally sets the `HOST_OS` environment variable to `Darwin` if your application is sensitive to the use
+of NFS; e.g., chown operations (which will be rejected by the NFS server.)
+
 ### Copyright and Licenses.
 
 Copyright 2020 Fruition Growth LLC. MIT licensed.
