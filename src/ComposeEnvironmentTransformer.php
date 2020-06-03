@@ -42,8 +42,8 @@ class ComposeEnvironmentTransformer {
    */
   public function __construct() {
     $this->finder = (new Finder())
-      ->ignoreVCS(TRUE)
       ->name('docker-compose.yml')
+      ->depth('== 0')
       ->ignoreUnreadableDirs();
     $this->pwd = getenv('PWD');
     $this->fileSystem = new Filesystem();

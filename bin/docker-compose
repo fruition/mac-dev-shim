@@ -76,8 +76,9 @@ nfs_setup() {
 }
 
 # Detect broken recursion.
-if [ "$1" == "version" ] && [ ! -z "$FRU_DEV_SHIM_RECURSION" ]; then
-  exit 99
+if [ "$1" == "version" ]; then
+  if [ ! -z "$FRU_DEV_SHIM_RECURSION" ]; then exit 99; fi
+  exec "$DOCKER_COMPOSE" "$@"
 fi
 
 # Use the next occurrence of docker-compose in the path.
@@ -105,6 +106,8 @@ if [ ! -z "$CLI_F_ARG" ] || [ ! -z "$COMPOSE_FILE" ]; then
   exec "$DOCKER_COMPOSE" "$@"
 fi
 
+set +e
 # This will be in the path.
-export COMPOSE_FILE=$(fru-mac-environment-transform)
-exec "$DOCKER_COMPOSE" "$@"
+COMPOSE_FILE=$(fru-mac-environment-transform)
+EXITCODE=$?
+if [ $EXITCODE -eq 0 ]; then exec "env COMPOSE_FILE=$COMPOSE_FILE" "$DOCKER_COMPOSE" "$@"; else echo "$COMPOSE_FILE" && exit $EXITCODE; fi

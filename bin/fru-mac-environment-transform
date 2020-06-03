@@ -18,6 +18,6 @@ try {
   $transformer->transform();
 }
 catch (\Throwable $e) {
-  print sprintf("Fatal error: %s\n", $e->getMessage());
-  exit($e->getCode() || 1);
+  echo sprintf("Fatal error: %s\n", $e->getMessage());
+  exit(1);
 }
