@@ -110,4 +110,4 @@ set +e
 # This will be in the path.
 COMPOSE_FILE=$(fru-mac-environment-transform)
 EXITCODE=$?
-if [ $EXITCODE -eq 0 ]; then exec "env COMPOSE_FILE=$COMPOSE_FILE" "$DOCKER_COMPOSE" "$@"; else echo "$COMPOSE_FILE" && exit $EXITCODE; fi
+if [ $EXITCODE -eq 0 ]; then exec "env" "COMPOSE_FILE=$COMPOSE_FILE" "$DOCKER_COMPOSE" "$@"; else echo "$COMPOSE_FILE" && exit $EXITCODE; fi
