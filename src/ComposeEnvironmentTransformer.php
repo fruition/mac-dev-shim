@@ -76,7 +76,7 @@ class ComposeEnvironmentTransformer {
     }
     $baseYaml = Yaml::parse(reset($result)->getContents());
     $cacheDir = getenv('HOME') . '/Library/Caches/FruitionMacDevShim';
-    $cachedFile = $cacheDir . '/' . crc32(serialize($baseYaml)) . '.yml';
+    $cachedFile = $cacheDir . '/' . crc32(serialize($baseYaml) . $dir) . '.yml';
     if (!$this->fileSystem->exists($cachedFile)) {
       $this->fileSystem->mkdir($cacheDir);
       $this->fileSystem->dumpFile($cachedFile, Yaml::dump($this->createOverrideYaml($baseYaml)));
